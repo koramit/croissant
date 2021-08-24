@@ -15,6 +15,11 @@ const enableLog = process.argv[3] ?? true;
     let patients = null;
     await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
         .then(response => patients = response.data)
+        .catch(() => {
+            if (enableLog) {
+                console.log('failed to load data');
+            }
+        })
     const driver = await new Builder()
         .withCapabilities({
             'browserName': 'chrome',
