@@ -178,10 +178,13 @@ const enableLog = process.argv[3] ?? true;
                                                         headers: { ...form.getHeaders() }
                                                     })
                                                     .then(() => {
+                                                        fs.unlinkSync(filename);
                                                         if (enableLog) {
                                                             console.log('upload OK.');
                                                         }
                                                     }).catch(error => {
+                                                        patient.result = null;
+                                                        patient.note = null;
                                                         if (enableLog) {
                                                             console.log('upload ERROR.');
                                                         }
