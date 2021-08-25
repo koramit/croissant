@@ -42,6 +42,7 @@ const enableLog = process.argv[3] ?? true;
     let patientsNo = patients.length;
     let waitResultSeconds = 0;
     let rechecked = false;
+    let lastRechecked = false;
     let waitForFrame = 0;
 
     try {
@@ -98,7 +99,7 @@ const enableLog = process.argv[3] ?? true;
                                 console.log('feedback ERROR.');
                             }
                         });
-                    if (patient.retry > (maxRetry + 100)) {
+                    if (patient.retry > maxRetry) {
                         patient.result = 'not found';
                         let form = new FormData();
                         form.append('token', configs.ww.token);
@@ -264,8 +265,12 @@ const enableLog = process.argv[3] ?? true;
                     console.log('done: ' + (patientsNo - patientRemain) + ' remains: ' + patientRemain + '/' + patientsNo);
                 }
                 // check are there any cases left
-                if (patientRemain === 1 && !rechecked) {
+                if (patientRemain === 10 && !rechecked) {
                     rechecked = true;
+                    await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
+                        .then(response => patients = response.data)
+                } else if (patientRemain === 1 && !lastRechecked) {
+                    lastRechecked = true;
                     await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
                         .then(response => patients = response.data)
                 }
