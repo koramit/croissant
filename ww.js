@@ -11,6 +11,9 @@ const configs = JSON.parse(fs.readFileSync('configs.json'));
 const maxRetry = process.argv[2] ?? 20;
 const enableLog = process.argv[3] ?? true;
 
+// now use self signed for endpoint
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 (async function main() {
     let patients = null;
     await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
