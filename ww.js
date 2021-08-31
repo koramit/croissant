@@ -65,7 +65,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                 let frame = await driver.findElement(By.id('EclairMainFrame'));
                 await driver.switchTo().frame(frame);
                 await driver.findElement(By.id('PatAliasId')).clear();
-                await driver.findElement(By.id('PatAliasId')).sendKeys(patient.hn); // 47179450 53063269
+                await driver.findElement(By.id('PatAliasId')).sendKeys(patient.hn);
                 await driver.findElement(By.id('SearchText')).clear();
                 await driver.findElement(By.id('SearchText')).sendKeys(labName);
                 await driver.findElement(By.id('ObservationAfter')).clear();
