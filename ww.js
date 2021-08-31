@@ -17,19 +17,9 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 (async function main() {
     let patients = null;
-    await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
-        .then(response => {
-            if (mode === 2) {
-                patients = response.data;
-            } else {
-                patients = [];
-                for (let i = 0; i < response.data.length; i++) {
-                    if (response.data[i].specimen_no % 2 === mode) {
-                        patients.push(response.data[i]);
-                    }
-                }
-            }
-        }).catch(() => {
+    await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token, mode: mode }, headers: { 'Content-Type': 'application/json' } })
+        .then(response => patients = response.data)
+        .catch(() => {
             if (enableLog) {
                 console.log('failed to load data');
             }
@@ -282,11 +272,11 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                 if (mode === 2) {
                     if (patientRemain === 10 && !rechecked) {
                         rechecked = true;
-                        await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
+                        await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token, mode: mode }, headers: { 'Content-Type': 'application/json' } })
                             .then(response => patients = response.data)
                     } else if (patientRemain === 1 && !lastRechecked) {
                         lastRechecked = true;
-                        await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
+                        await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token, mode: mode }, headers: { 'Content-Type': 'application/json' } })
                             .then(response => patients = response.data)
                     }
                 }
