@@ -9,7 +9,8 @@ const microXPath = '/html/body/table[2]/tbody/tr[5]/td[5]';
 const microXPathNote = '/html/body/table[4]/tbody/tr[2]/td[2]';
 const configs = JSON.parse(fs.readFileSync('configs.json'));
 const maxRetry = process.argv[2] ?? 20;
-const enableLog = process.argv[3] ?? true;
+const mode = process.argv[3] ?? 2;
+const enableLog = process.argv[4] ?? true;
 
 // now use self signed for endpoint
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -17,8 +18,13 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 (async function main() {
     let patients = null;
     await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
-        .then(response => patients = response.data)
-        .catch(() => {
+        .then(response => {
+            if (mode === 2) {
+                patients = response.data;
+            } else {
+                patients = response.data.filter(p => parseInt(p.specimen_no) % 2 === mode);
+            }
+        }).catch(() => {
             if (enableLog) {
                 console.log('failed to load data');
             }
@@ -91,7 +97,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                     if (enableLog) {
                         console.log('retry ' + patient.retry);
                     }
-                    waitForFrame = 1000;
+                    waitForFrame = 2000;
                     await axios.patch(configs.ww.yuzuEndpoint, { token: configs.ww.token, slug: patient.slug, message: 'not found' })
                         .then(() => {
                             if (enableLog) {
@@ -268,14 +274,16 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                     console.log('done: ' + (patientsNo - patientRemain) + ' remains: ' + patientRemain + '/' + patientsNo);
                 }
                 // check are there any cases left
-                if (patientRemain === 10 && !rechecked) {
-                    rechecked = true;
-                    await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
-                        .then(response => patients = response.data)
-                } else if (patientRemain === 1 && !lastRechecked) {
-                    lastRechecked = true;
-                    await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
-                        .then(response => patients = response.data)
+                if (mode === 2) {
+                    if (patientRemain === 10 && !rechecked) {
+                        rechecked = true;
+                        await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
+                            .then(response => patients = response.data)
+                    } else if (patientRemain === 1 && !lastRechecked) {
+                        lastRechecked = true;
+                        await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token }, headers: { 'Content-Type': 'application/json' } })
+                            .then(response => patients = response.data)
+                    }
                 }
                 if (patientRemain === 0) {
                     waitSeconds = 0;
