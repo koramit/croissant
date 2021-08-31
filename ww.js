@@ -22,7 +22,12 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
             if (mode === 2) {
                 patients = response.data;
             } else {
-                patients = response.data.filter(p => parseInt(p.specimen_no) % 2 === mode);
+                patients = [];
+                for (let i = 0; i < response.data.length; i++) {
+                    if (response.data[i].specimen_no % 2 === mode) {
+                        patients.push(response.data[i]);
+                    }
+                }
             }
         }).catch(() => {
             if (enableLog) {
