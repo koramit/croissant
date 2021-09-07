@@ -49,6 +49,10 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     let lastRechecked = false;
     let waitForFrame = 0;
 
+    if (patientsNo === 0) {
+        process.exit(0);
+    }
+
     try {
         await driver.get(configs.target.mainPage);
         await driver.findElement(By.id('UserCodeForm_UserCode')).clear()
