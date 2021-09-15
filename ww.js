@@ -166,6 +166,19 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                                                     fs.writeFileSync(filename, base64Data, 'base64');
                                                 });
 
+                                                try {
+                                                    await driver.findElement(By.xpath('/html/body/div[3]/table/tbody/tr'))
+                                                        .getText()
+                                                        .then(transaction => {
+                                                            patient.transaction = transaction.replaceAll("\n", ' | ').trim();
+                                                            if (enableLog) {
+                                                                console.log(patient.transaction);
+                                                            }
+                                                        });
+                                                } catch (NoSuchElementError) {
+                                                    patient.transaction = null;
+                                                }
+
                                                 if (result.toLowerCase() === 'detected' || result.toLowerCase() === 'inconclusive') {
                                                     try {
                                                         await driver.findElement(By.xpath(xpathNote)).getText().then(noteText => {
@@ -185,6 +198,9 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                                                 form.append('result', patient.result);
                                                 if (patient.note) {
                                                     form.append('note', patient.note);
+                                                }
+                                                if (patient.transaction) {
+                                                    form.append('transaction', patient.transaction);
                                                 }
                                                 form.append('screenshot', fs.readFileSync(filename), patient.hn + '.png');
                                                 await axios
