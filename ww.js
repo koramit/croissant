@@ -5,8 +5,10 @@ const { default: axios } = require('axios');
 const labName = '**SARS-CoV-2(COVID-19)RNA';
 const moleXPath = '/html/body/table[2]/tbody/tr[7]/td[5]';
 const moleXPathNote = '/html/body/table[6]/tbody/tr[2]/td[2]';
+const moleXPathSpecimen = '/html/body/table[2]/tbody/tr[5]/td[5]';
 const microXPath = '/html/body/table[2]/tbody/tr[5]/td[5]';
 const microXPathNote = '/html/body/table[4]/tbody/tr[2]/td[2]';
+const microXPathSpecimen = '/html/body/table[2]/tbody/tr[3]/td[5]';
 const configs = JSON.parse(fs.readFileSync('configs.json'));
 const maxRetry = process.argv[2] ?? 20;
 const mode = process.argv[3] ?? 2;
@@ -36,6 +38,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     let provider = null;
     let xpath = null;
     let xpathNote = null;
+    let xpathSpecimen = null;
     let incomplete = true;
     let filename = null;
     let dateMatched = false;
@@ -148,6 +151,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                                         provider = await driver.findElement(By.id(id)).getText().then(text => text);
                                         xpath = provider === 'MOLECULAR DIAGNOSIS' ? moleXPath : microXPath;
                                         xpathNote = provider === 'MOLECULAR DIAGNOSIS' ? moleXPathNote : microXPathNote;
+                                        xpathSpecimen = provider === 'MOLECULAR DIAGNOSIS' ? moleXPathSpecimen : microXPathSpecimen;
 
                                         await driver.switchTo().parentFrame();
                                         await driver.sleep(1000);
@@ -166,6 +170,28 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                                                     fs.writeFileSync(filename, base64Data, 'base64');
                                                 });
 
+                                                try { // if (result.toLowerCase() === 'detected' || result.toLowerCase() === 'inconclusive') {
+                                                    await driver.findElement(By.xpath(xpathNote)).getText().then(noteText => {
+                                                        patient.note = noteText.replaceAll("\n", ' | ').trim();
+                                                        if (enableLog) {
+                                                            console.log(patient.note);
+                                                        }
+                                                    });
+                                                } catch (NoSuchElementError) {
+                                                    patient.note = null;
+                                                }
+
+                                                try {
+                                                    await driver.findElement(By.xpath(xpathSpecimen)).getText().then(specimenText => {
+                                                        patient.specimen = specimenText.replaceAll("\n", ' | ').trim();
+                                                        if (enableLog) {
+                                                            console.log(patient.specimen);
+                                                        }
+                                                    });
+                                                } catch (NoSuchElementError) {
+                                                    patient.specimen = null;
+                                                }
+
                                                 try {
                                                     await driver.findElement(By.xpath('/html/body/div[3]/table/tbody/tr'))
                                                         .getText()
@@ -179,19 +205,6 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                                                     patient.transaction = null;
                                                 }
 
-                                                if (result.toLowerCase() === 'detected' || result.toLowerCase() === 'inconclusive') {
-                                                    try {
-                                                        await driver.findElement(By.xpath(xpathNote)).getText().then(noteText => {
-                                                            patient.note = noteText.replaceAll("\n", ' | ').trim();
-                                                            if (enableLog) {
-                                                                console.log(patient.note);
-                                                            }
-                                                        });
-                                                    } catch (NoSuchElementError) {
-                                                        patient.note = null;
-                                                    }
-                                                }
-
                                                 let form = new FormData();
                                                 form.append('token', configs.ww.token);
                                                 form.append('slug', patient.slug);
@@ -199,10 +212,13 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                                                 if (patient.note) {
                                                     form.append('note', patient.note);
                                                 }
+                                                form.append('screenshot', fs.readFileSync(filename), patient.hn + '.png');
                                                 if (patient.transaction) {
                                                     form.append('transaction', patient.transaction);
                                                 }
-                                                form.append('screenshot', fs.readFileSync(filename), patient.hn + '.png');
+                                                if (patient.specimen) {
+                                                    form.append('specimen', patient.specimen);
+                                                }
                                                 await axios
                                                     .post(configs.ww.yuzuEndpoint, form, {
                                                         headers: { ...form.getHeaders() }
