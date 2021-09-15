@@ -19,13 +19,38 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 (async function main() {
     let patients = null;
+    let patientsNo = null;
+    let patientRemain = null;
     await axios.get(configs.ww.yuzuEndpoint, { data: { token: configs.ww.token, mode: mode }, headers: { 'Content-Type': 'application/json' } })
-        .then(response => patients = response.data)
-        .catch(() => {
+        .then(response => {
+            patients = response.data;
+            patientsNo = patients.length;
+            patientRemain = patientsNo;
+        }).catch(() => {
             if (enableLog) {
                 console.log('failed to load data');
             }
-        })
+        });
+
+    let provider = null;
+    let xpath = null;
+    let xpathNote = null;
+    let xpathSpecimen = null;
+    let incomplete = true;
+    let filename = null;
+    let dateMatched = false;
+    let waitSeconds = 60000;
+    let mainWindow = '';
+    let popupWindow = '';
+    let waitResultSeconds = 0;
+    let rechecked = false;
+    let lastRechecked = false;
+    let waitForFrame = 0;
+
+    if (patientsNo === 0) {
+        process.exit(0);
+    }
+
     const driver = await new Builder()
         .withCapabilities({
             'browserName': 'chrome',
@@ -35,26 +60,6 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
         })
         .forBrowser('chrome')
         .build();
-    let provider = null;
-    let xpath = null;
-    let xpathNote = null;
-    let xpathSpecimen = null;
-    let incomplete = true;
-    let filename = null;
-    let dateMatched = false;
-    let waitSeconds = 60000;
-    let patientRemain = patients.length;
-    let mainWindow = '';
-    let popupWindow = '';
-    let patientsNo = patients.length;
-    let waitResultSeconds = 0;
-    let rechecked = false;
-    let lastRechecked = false;
-    let waitForFrame = 0;
-
-    if (patientsNo === 0) {
-        process.exit(0);
-    }
 
     try {
         await driver.get(configs.target.mainPage);
