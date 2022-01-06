@@ -76,9 +76,10 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                 await driver.switchTo().frame(frame);
                 await driver.findElement(By.id('PatAliasId')).clear();
                 await driver.findElement(By.id('PatAliasId')).sendKeys(patient.hn);
-                await driver.sleep(1000); // wait for focus changed to search text
+                await driver.sleep(1000); // wait for focus changed
                 await driver.findElement(By.id('SearchText')).clear();
                 await driver.findElement(By.id('SearchText')).sendKeys(labName);
+                await driver.sleep(1000); // wait for focus changed
                 await driver.findElement(By.id('ObservationAfter')).clear();
                 await driver.findElement(By.id('ObservationAfter')).sendKeys(patient.date_after);
                 await driver.findElement(By.id('SearchButton')).click();
