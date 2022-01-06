@@ -76,12 +76,15 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                 }
                 let frame = await driver.findElement(By.id('EclairMainFrame'));
                 await driver.switchTo().frame(frame);
-                await driver.findElement(By.id('PatAliasId')).clear();
-                await driver.findElement(By.id('PatAliasId')).sendKeys(patient.hn);
-                await driver.findElement(By.id('SearchText')).clear();
-                await driver.findElement(By.id('SearchText')).sendKeys(labName);
-                await driver.findElement(By.id('ObservationAfter')).clear();
-                await driver.findElement(By.id('ObservationAfter')).sendKeys(patient.date_after);
+                await driver.findElement(By.id('PatAliasId')).clear().sendKeys(patient.hn);
+                // await driver.findElement(By.id('PatAliasId')).clear();
+                // await driver.findElement(By.id('PatAliasId')).sendKeys(patient.hn);
+                await driver.findElement(By.id('SearchText')).clear().sendKeys(labName);
+                // await driver.findElement(By.id('SearchText')).clear();
+                // await driver.findElement(By.id('SearchText')).sendKeys(labName);
+                await driver.findElement(By.id('ObservationAfter')).clear().sendKeys(patient.date_after);
+                // await driver.findElement(By.id('ObservationAfter')).clear();
+                // await driver.findElement(By.id('ObservationAfter')).sendKeys(patient.date_after);
                 await driver.findElement(By.id('SearchButton')).click();
                 await driver.sleep(5000 + waitForFrame);
 
