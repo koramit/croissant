@@ -1,7 +1,7 @@
 const { Builder, By, Key, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const width = 960;
-const height = 500;
+const height = 640;
 const fs = require('fs');
 const FormData = require('form-data');
 const { default: axios } = require('axios');
@@ -76,6 +76,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                 await driver.switchTo().frame(frame);
                 await driver.findElement(By.id('PatAliasId')).clear();
                 await driver.findElement(By.id('PatAliasId')).sendKeys(patient.hn);
+                await driver.sleep(1000); // wait for focus changed to search text
                 await driver.findElement(By.id('SearchText')).clear();
                 await driver.findElement(By.id('SearchText')).sendKeys(labName);
                 await driver.findElement(By.id('ObservationAfter')).clear();
