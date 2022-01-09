@@ -167,7 +167,11 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
                                             if (enableLog) {
                                                 console.log(result);
                                             }
-                                            if (dateMatched && result !== 'Result To Follow' && result !== '*') {
+                                            let expectedResults = ['not detected', 'inconclusive', 'detected'];
+                                            if (
+                                                dateMatched &&
+                                                expectedResults.filter(r => r === result.toLowerCase()).length === 1
+                                            ) {
                                                 patient.result = result;
                                                 await driver.takeScreenshot().then(async data => {
                                                     let base64Data = data.replace(/^data:image\/png;base64,/, '');
