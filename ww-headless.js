@@ -16,6 +16,7 @@ const configs = JSON.parse(fs.readFileSync('configs.json'));
 const maxRetry = process.argv[2] ?? 20;
 const mode = process.argv[3] ?? 2;
 const enableLog = process.argv[4] ?? true;
+const maxNotFoundInARoll = 30;
 
 // now use self signed for endpoint
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -49,6 +50,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     let rechecked = false;
     let lastRechecked = false;
     let waitForFrame = 0;
+    let notFoundCount = 0;
 
     if (patientsNo === 0) {
         process.exit(0);
@@ -89,8 +91,14 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
                 try {
                     frame = await driver.findElement(By.id('ReportTreeFrame'));
+                    notFoundCount = 0;
                 } catch (NoSuchElementError) {
                     frame = false;
+                    notFoundCount = notFoundCount + 1;
+                    if (notFoundCount > maxNotFoundInARoll) {
+                        await driver.quit();
+                        process.exit(0);
+                    }
                     await driver.getWindowHandle().then(windowStr => popupWindow = windowStr);
                     if (popupWindow !== mainWindow) {
                         await driver.switchTo().window(popupWindow);
@@ -345,5 +353,6 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
         }
     } finally {
         await driver.quit();
+        process.exit(0);
     }
 })();
