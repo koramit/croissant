@@ -16,7 +16,7 @@ const configs = JSON.parse(fs.readFileSync('configs.json'));
 const maxRetry = process.argv[2] ?? 20;
 const mode = process.argv[3] ?? 2;
 const enableLog = process.argv[4] ?? true;
-const maxNotFoundInARoll = 30;
+const maxNotFoundInARoll = 20;
 
 // now use self signed for endpoint
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -104,15 +104,8 @@ async function run() {
 
                 try {
                     frame = await driver.findElement(By.id('ReportTreeFrame'));
-                    notFoundCount = 0;
                 } catch (NoSuchElementError) {
                     frame = false;
-                    notFoundCount = notFoundCount + 1;
-                    if (notFoundCount > maxNotFoundInARoll) {
-                        await driver.quit();
-                        // process.exit(0);
-                        return false;
-                    }
                     await driver.getWindowHandle().then(windowStr => popupWindow = windowStr);
                     if (popupWindow !== mainWindow) {
                         await driver.switchTo().window(popupWindow);
@@ -122,6 +115,12 @@ async function run() {
                 }
 
                 if (frame === false) {
+                    notFoundCount = notFoundCount + 1;
+                    if (notFoundCount > maxNotFoundInARoll) {
+                        await driver.quit();
+                        // process.exit(0);
+                        return false;
+                    }
                     patient.retry = patient.retry + 1;
                     if (enableLog) {
                         console.log('retry ' + patient.retry);
@@ -138,7 +137,7 @@ async function run() {
                             }
                         });
                     if (patient.retry > maxRetry) {
-                        patient.result = 'not found';
+                        patient.result = 'not found => ' + notFoundCount;
                         let form = new FormData();
                         form.append('token', configs.ww.token);
                         form.append('slug', patient.slug);
@@ -158,6 +157,7 @@ async function run() {
                         console.log('not found');
                     }
                 } else {
+                    notFoundCount = 0;
                     waitForFrame = 0;
                     await driver.switchTo().frame(frame);
                     await driver.findElements(By.css('a.TDLITTLE')).then(async doms => {
