@@ -22,15 +22,17 @@ const maxNotFoundInARoll = 20;
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 (async function main() {
-    let stop = false;
+    // let stop = false;
     let runno = 1;
 
-    while (!stop) {
+    // while (!stop) {
+    while (true) {
         console.log(`run# ${runno}`);
+        // stop = await run();
         stop = await run();
         runno = runno + 1;
     }
-    process.exit(0);
+    // process.exit(0);
 })();
 
 async function run() {
@@ -65,8 +67,8 @@ async function run() {
     let notFoundCount = 0;
 
     if (patientsNo === 0) {
-        // process.exit(0);
-        return true;
+        process.exit(0);
+        // return true;
     }
 
     const driver = await new Builder()
@@ -365,9 +367,10 @@ async function run() {
             }
             incomplete = !(patients.filter(p => p.result).length === patients.length);
         }
+        process.exit(0);
     } finally {
         await driver.quit();
-        // process.exit(0);
-        return true;
+        process.exit(0);
+        // return true;
     }
 }
