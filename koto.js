@@ -1,23 +1,40 @@
 const robot = require("robotjs");
 const fs = require('fs');
+const { default: axios } = require('axios');
 const { exec } = require("child_process");
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const configs = JSON.parse(fs.readFileSync('configs.json')).koto;
 const waitInput = 1543;
 const waitTargetLoaded = 10987;
 const waitProcessed = 15432;
+const waitIteration = 567890;
+const postOptions = { data: { token: configs.token }, headers: { 'Content-Type': 'application/json' } };
 
 (async function main() {
-    await bootTarget();
-    await requestService();
-    await processResponse();
-    // wait for next iteration
+    // check if work needed
+    let order = await axios.post('/#', postOptions)
+        .then(res => res.data)
+        .catch(error => process.exit(0));
+
+    if (!order.run) {
+        process.exit();
+    }
+
+    await bootTarget(); // waitInput*6 + waitTargetLoaded => 20.245 secs
+
+    // may need to correct date value
+
+    for (let iter = 1; i <= 5; iter++) {
+        await requestService(); // waitInput*3 + waitProcessed*2 => 35.493 secs
+        await processService(order.dateReff);
+        await sleep(waitIteration); // ~ 10 mins
+    }
+
     downTarget();
 })();
 
-async function processResponse() {
-    let todayStr = (new Date()).toISOString().split('T')[0];
-    let path = configs.basePath + todayStr + configs.dataType;
+async function processService(dateReff) {
+    let path = configs.basePath + dateReff + configs.dataType;
     try {
         if (!fs.existsSync(path)) {
             // send feedback
