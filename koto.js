@@ -1,48 +1,43 @@
 const robot = require("robotjs");
 const fs = require('fs');
 const { default: axios } = require('axios');
+const FormData = require('form-data');
 const { exec } = require("child_process");
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const configs = JSON.parse(fs.readFileSync('configs.json')).koto;
 const waitInput = 1234;
 const waitTargetLoaded = 8765;
-const waitProcessed = 90678;
-const waitIteration = 567890;
+const waitProcessed = 90123;
+const waitIteration = 487890;
+const iterations = 5;
 const postOptions = { data: { token: configs.token }, headers: { 'Content-Type': 'application/json' } };
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // use internal self signed IP
 
 (async function main() {
-    // check if work needed
-    // let order = await axios.post('/#', postOptions)
-    //     .then(res => res.data)
-    //     .catch(error => process.exit(0));
+    let order = await axios.get(configs.enpoint, postOptions)
+        .then(res => res.data)
+        .catch(error => process.exit(0));
 
-    // if (!order.run) {
-    //     process.exit();
-    // }
-
-    await bootTarget(); // waitInput*6 + waitTargetLoaded => 20.245 secs
-
-    for(let i = 11; i <= 30; i++) {
-        await setDateReff(i + '-09-2021');
-        await requestService();
-        await sleep(5000);
+    if (!order.run) {
+        process.exit();
     }
 
-    // may need to correct date value
+    await bootTarget(); // waitInput*6 + waitTargetLoaded => 16.169 secs
 
-    // for (let iter = 1; i <= 5; iter++) {
-    //     await requestService(); // waitInput*3 + waitProcessed*2 => 35.493 secs
-    //     await processService(order.dateReff);
-    //     await sleep(waitIteration); // ~ 10 mins
-    // }
+    await setDateReff(order.dateReff.split('-').reverse().join('-')); // waitInput*5 => 6.17 secs
+
+    for (let iter = 1; i <= iterations; iter++) {
+        await requestService(); // waitInput*6 + waitProcessed*1.5 => 142.588 secs
+        await processService(order.dateReff);
+        await sleep(waitIteration); // ~ 8 mins
+    }
 
     downTarget();
 })();
 
-async function setDateReff(dateReff)
-{
+async function setDateReff(dateReff) {
     let inputs = dateReff.split('-');
-    for(let i = 0; i < inputs.length; i++) {
+    for (let i = 0; i < inputs.length; i++) {
         await gotoConner();
         robot.moveMouse(configs['input' + (i + 3)].x, configs['input' + (i + 3)].y);
         await sleep(waitInput);
@@ -59,15 +54,33 @@ async function processService(dateReff) {
         if (!fs.existsSync(path)) {
             // send feedback
             console.log('file not found');
-
-            downTarget();
+            let form = { ...postOptions };
+            form.data.error = true;
+            await axios.post(configs.enpoint, form).finally(() => downTarget());
         }
     } catch (error) {
         console.log(error);
         downTarget();
     }
+
     // send output
-    fs.unlinkSync(path);
+    let form = new FormData();
+    form.append('token', configs.token);
+    form.append('dateReff', dateReff);
+    form.append('excel', fs.readFileSync(path), 'colabs.xlsx');
+    await axios
+        .post(configs.endpoint, form, {
+            headers: { ...form.getHeaders() }
+        })
+        .then(res => {
+            fs.unlinkSync(path);
+            console.log('upload OK.');
+            if (res.data.finished) {
+                downTarget();
+            }
+        }).catch(error => {
+            console.log('upload ERROR.');
+        });
 }
 
 async function requestService() {
@@ -76,12 +89,10 @@ async function requestService() {
     await sleep(waitInput);
     robot.mouseClick();
     await sleep(waitProcessed);
-    // robot.keyTap('enter');
     robot.moveMouse(configs.btn3.x, configs.btn3.y);
     await sleep(waitInput);
     robot.mouseClick();
-    // await sleep(waitInput);
-    await sleep(parseInt(waitProcessed/2));
+    await sleep(parseInt(waitProcessed / 2));
     await gotoConner();
 }
 
