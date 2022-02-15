@@ -7,16 +7,21 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const configs = JSON.parse(fs.readFileSync('configs.json')).koto;
 const waitInput = 1234;
 const waitTargetLoaded = 8765;
-const waitProcessed = 90123;
-const waitIteration = 487890;
+const waitProcessed = 60123;
+const waitIteration = 567890;
 const iterations = 5;
 const postOptions = { data: { token: configs.token }, headers: { 'Content-Type': 'application/json' } };
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // use internal self signed IP
 
 (async function main() {
-    let order = await axios.get(configs.enpoint, postOptions)
+    let order = await axios.get(configs.endpoint, postOptions)
         .then(res => res.data)
-        .catch(error => process.exit(0));
+        .catch(error => {
+            console.log(error);
+            process.exit(0);
+        });
+
+    console.log(order);
 
     if (!order.run) {
         process.exit();
@@ -26,9 +31,11 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // use internal self signed IP
 
     await setDateReff(order.dateReff.split('-').reverse().join('-')); // waitInput*5 => 6.17 secs
 
-    for (let iter = 1; i <= iterations; iter++) {
+    for (let i = 1; i <= iterations; i++) {
+        console.log(`#${i}`)
         await requestService(); // waitInput*6 + waitProcessed*1.5 => 142.588 secs
         await processService(order.dateReff);
+        console.log('waiting...');
         await sleep(waitIteration); // ~ 8 mins
     }
 
@@ -56,7 +63,7 @@ async function processService(dateReff) {
             console.log('file not found');
             let form = { ...postOptions };
             form.data.error = true;
-            await axios.post(configs.enpoint, form).finally(() => downTarget());
+            await axios.post(configs.endpoint, form).finally(() => downTarget());
         }
     } catch (error) {
         console.log(error);
@@ -80,6 +87,9 @@ async function processService(dateReff) {
             }
         }).catch(error => {
             console.log('upload ERROR.');
+            if (fs.existsSync(path)) {
+                fs.unlinkSync(path);
+            }
         });
 }
 
