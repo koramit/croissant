@@ -66,7 +66,7 @@ async function processService(dateReff) {
                 { token: configs.token, error: true },
                 {
                     headers: { 'Content-Type': 'application/json' }
-                }).finally(() => downTarget());
+                });
 
             downTarget();
         }
