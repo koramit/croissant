@@ -9,7 +9,7 @@ const waitInput = 1234;
 const waitTargetLoaded = 8765;
 const waitProcessed = 60123;
 const waitIteration = 567890;
-const iterations = 5;
+const iterations = 50;
 const postOptions = { data: { token: configs.token }, headers: { 'Content-Type': 'application/json' } };
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // use internal self signed IP
 
