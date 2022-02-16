@@ -67,10 +67,12 @@ async function processService(dateReff) {
                 {
                     headers: { 'Content-Type': 'application/json' }
                 }).finally(() => downTarget());
+
+            downTarget();
         }
     } catch (error) {
-        console.log(error);
         downTarget();
+        console.log(error);
     }
 
     // send output
