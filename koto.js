@@ -61,7 +61,12 @@ async function processService(dateReff) {
         if (!fs.existsSync(path)) {
             // send feedback
             console.log('file not found');
-            await axios.post(configs.endpoint, { data: { token: configs.token, error: true }, headers: { 'Content-Type': 'application/json' } }).finally(() => downTarget());
+            await axios.post(
+                configs.endpoint,
+                { token: configs.token, error: true },
+                {
+                    headers: { 'Content-Type': 'application/json' }
+                }).finally(() => downTarget());
         }
     } catch (error) {
         console.log(error);
