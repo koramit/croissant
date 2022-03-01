@@ -13,8 +13,8 @@ const waitProcessed = 60123;
     let today = new Date();
     let dateArr = [];
     dateArr.push(today.getFullYear());
-    dateArr.push((today.getMonth() + '').padStart(2, '0'));
-    dateArr.push((today.getDay() + '').padStart(2, '0'));
+    dateArr.push(((today.getMonth() + 1) + '').padStart(2, '0'));
+    dateArr.push((today.getDate() + '').padStart(2, '0'));
     today = dateArr.join('-');
 
     await setDateReff(today.split('-').reverse().join('-')); // waitInput*5 => 6.17 secs
